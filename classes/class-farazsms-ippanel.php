@@ -75,7 +75,9 @@ class Farazsms_Ippanel {
 			$response_body = wp_remote_retrieve_body( $response );
 			$response_data = json_decode( $response_body );
 
-			return json_decode($response_data[1], true);
+			if (isset($response_data[1])) {
+				return json_decode($response_data[1], true);
+			}
 		}
 
 		if (is_wp_error($response)) {
@@ -417,6 +419,7 @@ class Farazsms_Ippanel {
 
 		return json_decode($response , true);
 	}
+
 }
 
 Farazsms_Ippanel::get_instance();

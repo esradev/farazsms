@@ -32,7 +32,6 @@ class Farazsms_Woocommerce {
 	private static $woo_retention_order_month;
 	private static $woo_retention_msg;
 
-
 	/**
 	 * Initiator
 	 *
@@ -61,12 +60,12 @@ class Farazsms_Woocommerce {
 			self::$woo_retention_msg         = $woocommerce_options['woo_retention_msg'];
 		}
 
+		add_action( 'wp_enqueue_scripts', [ $this, 'enqueue_styles' ] );
+		add_action( 'wp_enqueue_scripts', [ $this, 'enqueue_scripts' ] );
 		add_action( 'add_meta_boxes', [ $this, 'add_tracking_code_meta_box' ] );
 		add_action( 'add_meta_boxes', [ $this, 'tracking_code_order_postbox' ] );
 		add_action( 'wp_ajax_fsms_send_tracking_code_sms', [ $this, 'send_tracking_code_sms' ] );
 		add_action( 'wp_ajax_nopriv_fsms_send_tracking_code_sms', [ $this, 'send_tracking_code_sms' ] );
-		add_action( 'wp_enqueue_scripts', [ $this, 'enqueue_styles' ] );
-		add_action( 'wp_enqueue_scripts', [ $this, 'enqueue_scripts' ] );
 		add_action( 'woocommerce_thankyou', [ $this, 'woo_payment_finished' ] );
 		add_action( 'init', [$this, 'fsms_woo_retention_action' ]);
 		add_action( 'woocommerce_checkout_get_value', [ $this, 'fsms_pre_populate_checkout_fields' ], 10, 2 );
@@ -131,25 +130,29 @@ class Farazsms_Woocommerce {
 			echo '<p>' . esc_html__( 'Multiple tracking codes found for this order:', 'farazsms' ) . '</p>';
 
 			foreach ( $tracking_code_data as $data ) {
+				// Convert the date format to your desired format
+				$formatted_date = date('Y/m/d', strtotime($data->post_date));
 				echo '<ul>';
 				echo '<li><strong>' . esc_html__( 'Tracking Code: ', 'farazsms' ) . '</strong>' . esc_html( $data->tracking_code ) . '</li>';
 				echo '<li><strong>' . esc_html__( 'Post Service Provider: ', 'farazsms' ) . '</strong> ' . esc_html( $data->post_service_provider ) . '</li>';
-				echo '<li><strong>' . esc_html__( 'Post Date: ', 'farazsms' ) . '</strong>' . esc_html( $data->post_date ) . '</li>';
+				echo '<li><strong>' . esc_html__( 'Post Date: ', 'farazsms' ) . '</strong>' . esc_html( $formatted_date ) . '</li>';
 				echo '</ul>';
 			}
 
 		} else {
 			echo '<p>' . esc_html__( 'One tracking code found for this order:', 'farazsms' ) . '</p>';
+			// Convert the date format to your desired format
+			$formatted_date = date('Y/m/d', strtotime($tracking_code_data[0]->post_date));
 			?>
 			<div class="already-sent-tracking-code">
 				<p>
 					<strong><?php echo esc_html__( 'Tracking Code: ', 'farazsms' ) ?></strong> <?php echo esc_html( $tracking_code_data[0]->tracking_code ); ?>
 				</p>
 				<p>
-					<strong><?php echo esc_html__( '...', 'farazsms' ) ?></strong> <?php echo esc_html( $tracking_code_data[0]->post_service_provider ); ?>
+					<strong><?php echo esc_html__( 'Post Service Provider: ', 'farazsms' ) ?></strong> <?php echo esc_html( $tracking_code_data[0]->post_service_provider ); ?>
 				</p>
 				<p>
-					<strong><?php echo esc_html__( 'Post Date: ', 'farazsms' ) ?></strong> <?php echo esc_html( $tracking_code_data[0]->post_date ); ?>
+					<strong><?php echo esc_html__( 'Post Date: ', 'farazsms' ) ?></strong> <?php echo esc_html( $formatted_date ); ?>
 				</p>
 			</div>
 			<?php
@@ -224,7 +227,8 @@ class Farazsms_Woocommerce {
 		// Date picker for selecting the date of posting
 		echo '<div id="fsms-tracking-code-date">';
 		echo '<label for="fsms_post_date">' . esc_html__( 'Date of Posting', 'farazsms' ) . '</label>';
-		echo '<input type="date" name="post_date" id="fsms_post_date" />';
+		echo '<div id="farazsms-post-persian-date"></div>';
+		echo '<input type="hidden" name="farazsms-tracking-date-field-value" id="farazsms-tracking-date-field-value" value=""/>';
 		echo '</div>';
 
 		echo '<div id="fsms-tracking-code-button"><div class="fsms_button" id="send_tracking_code_button"><span class="button__text">' . esc_html__( 'Send Sms', 'farazsms' ) . '</span></div></div>';
@@ -289,6 +293,15 @@ class Farazsms_Woocommerce {
 
 			$this->send_tracking_code( $phone, $tracking_code, $order_data );
 
+			// Convert post_date to date format to save on the DB
+			$date_str = str_replace(['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'], ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'], $post_date);
+			$date_parts = explode('/', $date_str); // explode the string by "/"
+			$year = $date_parts[0];
+			$month = $date_parts[1];
+			$day = $date_parts[2];
+			$jalali_date = new DateTime("$year-$month-$day", new DateTimeZone('Asia/Tehran')); // create a DateTime object with the Jalali date
+			$gregorian_date = $jalali_date->format('Y-m-d'); // format the date in the Gregorian calendar as 'YYYY-MM-DD'
+
 			// Insert tracking code data into database
 			global $wpdb;
 			$table_name = $wpdb->prefix . 'farazsms_tracking_codes';
@@ -297,7 +310,7 @@ class Farazsms_Woocommerce {
 				[
 					'tracking_code'         => $tracking_code,
 					'post_service_provider' => $post_service_provider,
-					'post_date'             => $post_date,
+					'post_date'             => $gregorian_date,
 					'order_id'              => $order_id
 				]
 			);

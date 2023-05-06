@@ -96,6 +96,10 @@ class Farazsms_Settings {
 	 * @since 1.0.0
 	 */
 	public function admin_enqueue_scripts( $hook ) {
+		wp_enqueue_script( 'react-multi-date-picker', FARAZSMS_URL . 'assets/js/react-multi-date-picker.js', [
+			'wp-element',
+			'wp-i18n',
+		], FARAZSMS_VERSION, true );
 		wp_enqueue_script(
 			'farazsms-script',
 			FARAZSMS_URL . 'build/index.js',
@@ -132,7 +136,7 @@ class Farazsms_Settings {
 		wp_set_script_translations( 'farazsms-script', 'farazsms', FARAZSMS_PATH . '/languages' );
 
 		wp_enqueue_script( 'jquery-validate', FARAZSMS_URL . 'assets/js/jquery.validate.min.js', [ 'jquery' ], FARAZSMS_VERSION, true );
-		wp_enqueue_script( 'select2', FARAZSMS_URL . 'assets/js/select2.min.js' , [ 'jquery-validate' ], FARAZSMS_VERSION, true );
+		wp_enqueue_script( 'select2', FARAZSMS_URL . 'assets/js/select2.min.js', [ 'jquery-validate' ], FARAZSMS_VERSION, true );
 
 		wp_enqueue_style( 'farazsms-tracking-code', FARAZSMS_URL . 'assets/css/farazsms-tracking-code.css', [], FARAZSMS_VERSION, 'all' );
 		wp_enqueue_script( 'farazsms-tracking-code', FARAZSMS_URL . 'assets/js/farazsms-tracking-code.js', [ 'jquery-validate' ], FARAZSMS_VERSION, true );
@@ -381,10 +385,10 @@ class Farazsms_Settings {
 	 */
 	public function settings_link( $links ) {
 		// Add settings link
-		$settings_link = '<a href="' . FARAZSMS_SETTINGS_LINK . '">' . esc_html__('Settings', 'farazsms') .'</a>';
+		$settings_link = '<a href="' . FARAZSMS_SETTINGS_LINK . '">' . esc_html__( 'Settings', 'farazsms' ) . '</a>';
 
 		// Add document link
-		$doc_link = '<a href="' . FARAZSMS_WEB_MAIN_DOC . '" target="_blank" rel="noopener noreferrer">' . esc_html__('Docs', 'farazsms') . '</a>';
+		$doc_link = '<a href="' . FARAZSMS_WEB_MAIN_DOC . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'Docs', 'farazsms' ) . '</a>';
 		array_push( $links, $settings_link, $doc_link );
 
 		return $links;
@@ -413,7 +417,7 @@ class Farazsms_Settings {
 
 	public function rss_postbox_container() {
 		?>
-        <div class="fsms-rss-widget">
+		<div class="fsms-rss-widget">
 			<?php
 			wp_widget_rss_output(
 				'https://farazsms.com/feed/',
@@ -425,7 +429,7 @@ class Farazsms_Settings {
 				]
 			);
 			?>
-        </div>
+		</div>
 		<?php
 
 	}
@@ -456,7 +460,7 @@ class Farazsms_Settings {
 			if ( $already_sent === '1' ) {
 				return;
 			}
-			$message = __( 'Dear user, your panel will expire less than a month from now. To renew your SMS panel, contact Faraz SMS', 'farazsms' );
+			$message = __( 'Dear user, your panel will expire less than a month from now. To renew your SMS panel, contact Farazsms', 'farazsms' );
 			Farazsms_Ippanel::send_message( [ Farazsms_Base::$admin_number ], $message, '+98club' );
 			update_option( 'sent_low_remaining_days_30', '1' );
 		} elseif ( $daysleft > 1 && $daysleft < 7 ) {
@@ -465,7 +469,7 @@ class Farazsms_Settings {
 				return;
 			}
 
-			$message = __( 'Dear user, your panel will expire less than a week from now. To renew your SMS panel, contact Faraz SMS.', 'farazsms' );
+			$message = __( 'Dear user, your panel will expire less than a week from now. To renew your SMS panel, contact Farazsms.', 'farazsms' );
 			Farazsms_Ippanel::send_message( [ Farazsms_Base::$admin_number ], $message, '+98club' );
 			update_option( 'sent_low_remaining_days_7', '1' );
 		}

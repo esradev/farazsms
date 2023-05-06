@@ -158,11 +158,13 @@ class Farazsms_Newsletter_Action_After_Submit extends Action_Base {
 		$phonebook_options = [];
 
 		// Get phonebooks from your plugin
-		$phonebooks = Farazsms_Ippanel::get_phonebooks()['data'];
+		$phonebooks = Farazsms_Ippanel::get_phonebooks();
 
 		// Loop through phonebooks and add as select options
-		foreach ( $phonebooks as $phonebook ) {
-			$phonebook_options[ $phonebook['id'] ] = $phonebook['title'];
+		if ( is_array( $phonebooks ) ) {
+			foreach ( $phonebooks as $phonebook ) {
+				$phonebook_options[ $phonebook['id'] ] = $phonebook['title'];
+			}
 		}
 
 		$widget->add_control(
@@ -267,8 +269,8 @@ class Farazsms_Newsletter_Action_After_Submit extends Action_Base {
 			$fields[ $id ] = $field['value'];
 		}
 
-		$from         = $settings['sms_sender_number'];
-		$phone           = $record->replace_setting_shortcodes( $settings['sms_recipient'] );
+		$sender         = $settings['sms_sender_number'];
+		$phone        = $record->replace_setting_shortcodes( $settings['sms_recipient'] );
 		$farazpattern = $settings['sms_pattern_code'];
 		$phonebook    = $settings['phonebook'];
 		$content      = $settings['sms_content'];
@@ -309,9 +311,9 @@ class Farazsms_Newsletter_Action_After_Submit extends Action_Base {
 		if ( $settings['sms_to_visitor'] == 'yes' && $settings['sms_send_type'] == 'webservice' ) {
 			if ( str_contains( trim( $content ), '[field' ) ) {
 				$content_value = $record->replace_setting_shortcodes( $settings['sms_content'] );
-				Farazsms_Ippanel::send_message( [ $phone ], $content_value );
+				Farazsms_Ippanel::send_message( [ $phone ], $content_value, $sender );
 			} else {
-				Farazsms_Ippanel::send_message( [ $phone ], $content );
+				Farazsms_Ippanel::send_message( [ $phone ], $content, $sender );
 			}
 		}
 
@@ -348,9 +350,9 @@ class Farazsms_Newsletter_Action_After_Submit extends Action_Base {
 		if ( $settings['sms_to_admin'] == 'yes' && $settings['sms_admin_method'] == 'webservice' ) {
 			if ( str_contains( trim( $admin_content ), '[field' ) ) {
 				$admin_content_value = $record->replace_setting_shortcodes( $settings['sms_admin_content'] );
-				Farazsms_Ippanel::send_message( $admins_numbers, $admin_content_value );
+				Farazsms_Ippanel::send_message( $admins_numbers, $admin_content_value, $sender );
 			} else {
-				Farazsms_Ippanel::send_message( $admins_numbers, $admin_content );
+				Farazsms_Ippanel::send_message( $admins_numbers, $admin_content, $sender );
 			}
 		}
 	}
