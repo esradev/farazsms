@@ -143,11 +143,9 @@ class Farazsms_Ippanel {
 	 * @since 2.0.0
 	 */
 	public static function get_registered_pattern_variables( $patternCode ) {
-		$uname = Farazsms_Base::$username;
-		$pass  = Farazsms_Base::$password;
 		$body  = [
-			'uname'       => $uname,
-			'pass'        => $pass,
+			'uname'       => Farazsms_Base::$username,
+			'pass'        => Farazsms_Base::$password,
 			'op'          => 'patternInfo',
 			'patternCode' => $patternCode,
 		];
@@ -179,11 +177,7 @@ class Farazsms_Ippanel {
 	 *
 	 * @return array|mixed|WP_Error|null
 	 */
-	public static function send_message( $phones ,$message, $sender = '') {
-
-		if ( ! $sender) {
-			$sender = Farazsms_Base::$fromNum;
-		}
+	public static function send_message( $phones ,$message, $sender) {
 
 		$body     = [
 			'op'      => 'send',
@@ -210,10 +204,7 @@ class Farazsms_Ippanel {
 		return json_decode( $response['body'] );
 	}
 
-	public static function send_sms_to_phonebooks ($phonebooks_ids, $message ,$sender = '' ) {
-		if ( ! $sender) {
-			$sender = Farazsms_Base::$fromNum;
-		}
+	public static function send_sms_to_phonebooks ($phonebooks_ids, $message ,$sender ) {
 
 		$url = 'https://ippanel.com/services.jspd';
 
@@ -417,7 +408,7 @@ class Farazsms_Ippanel {
 			'body' => json_encode($params),
 		] );
 
-		return json_decode($response , true);
+		return $response;
 	}
 
 }

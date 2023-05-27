@@ -237,6 +237,17 @@ class Farazsms_Settings {
 				'admin_page',
 			]
 		);
+        add_submenu_page(
+			FARAZSMS_SLUG,
+			__( 'Farazsms', 'farazsms' ),
+	        __( 'WooCommerce Order SMS', 'farazsms' ),
+			'manage_options',
+			FARAZSMS_SLUG . '#/woocommerce_order_actions',
+			[
+				$this,
+				'admin_page',
+			]
+		);
 		add_submenu_page(
 			FARAZSMS_SLUG,
 			__( 'Farazsms', 'farazsms' ),
@@ -349,7 +360,7 @@ class Farazsms_Settings {
 			]
 		);
 		$credit = Farazsms_Ippanel::get_credit();
-		if ( $credit ) {
+		if ( is_numeric($credit) ) {
 			$wp_admin_bar->add_menu(
 				[
 					'parent' => 'farazsms',

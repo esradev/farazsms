@@ -59,10 +59,9 @@ class Farazsms_Order_Review {
 			add_action( 'wp_enqueue_scripts', [$this, 'enqueue_styles'] );
 			add_action( 'wp_enqueue_scripts', [$this, 'enqueue_scripts'] );
 			add_shortcode( 'farazsms_order_review_landing_page', [$this, 'order_review_page'] );
-			add_action('init', [$this, 'create_order_review_landing_page']);
+			add_action('init', [$this, 'create_order_review_landing_page'], 99, 0);
 			add_action('wp_ajax_farazsms_submit_order_review', [$this, 'farazsms_submit_order_review']);
 			add_action('wp_ajax_nopriv_farazsms_submit_order_review', [$this, 'farazsms_submit_order_review']);
-			add_action( 'woocommerce_thankyou', [$this, 'schedule_review_reminder_sms'] );
 			add_action( 'woocommerce_order_status_completed', [$this, 'schedule_review_reminder_sms'] );
 		}
 
@@ -180,33 +179,46 @@ class Farazsms_Order_Review {
 			$review_page = home_url( '/order-review/' );
 			$data['review_link'] = $review_page . '?order_id=' . $order_id;
 			$phone_number = Farazsms_Base::normalize_phone_number($phone_number);
-			$this->send_timed_message( $phone_number, $data, $order->get_date_created() );
+			$this->send_timed_message( $phone_number, $data, $order );
 		}
 	}
 
-	public function send_timed_message( $phone_number, $data, $order_date ) {
+	public function send_timed_message( $phone_number, $data, $order ) {
 		$fsms_woo_poll         = self::$woo_poll;
 		$fsms_woo_poll_time    = self::$woo_poll_time;
 		$fsms_woo_poll_message = self::$woo_poll_msg;
 		if ( $fsms_woo_poll !== true || empty( $fsms_woo_poll_time ) || empty( $fsms_woo_poll_message ) ) {
 			return;
 		}
+
+		$billing_first_name = $order->get_billing_first_name();
+		$billing_last_name = $order->get_billing_last_name();
+		$user_full_name = $billing_first_name . ' ' . $billing_last_name;
+
+		$order_items = $order->get_items();
+		$item_names = [];
+
+		foreach ($order_items as $item) {
+			$item_names[] = $item->get_name();
+		}
+
 		$message = str_replace(
 			[
-				'%time%',
-				'%sitename%',
+				'%items%',
+				'%customer_name%',
 				'%review_link%',
 			],
 			[
-				$fsms_woo_poll_time,
-				get_bloginfo( 'name' ),
+				implode(', ', $item_names),
+				$user_full_name,
 				$data['review_link'],
 			],
 			$fsms_woo_poll_message
 		);
 
+
 		// Input date/time string in WordPress default timezone
-		$date_to_send = date('Y-m-d H:i:s', strtotime($order_date->date('Y-m-d H:i:s') . ' + ' . $fsms_woo_poll_time . ' days'));
+		$date_to_send = date('Y-m-d H:i:s', strtotime($order->get_date_created()->date('Y-m-d H:i:s') . ' + ' . $fsms_woo_poll_time . ' days'));
 
 		// Convert to DateTime object in WordPress default timezone
 		$datetime_wp = new DateTime($date_to_send, new DateTimeZone('UTC'));

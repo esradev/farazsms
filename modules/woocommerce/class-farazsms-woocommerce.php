@@ -165,14 +165,20 @@ class Farazsms_Woocommerce {
 	 * @return void
 	 */
 	public function add_tracking_code_meta_box() {
-		add_meta_box(
-			'fsms-already-sent-tracking-codes',
-			__( 'Already sent tracking code', 'farazsms' ),
-			[ $this, 'already_sent_tracking_codes' ],
-			'shop_order',
-			'side',
-			'default'
-		);
+		// Get the current order
+		$order = wc_get_order();
+
+		// Check if the order status is "completed"
+		if ( $order && $order->get_status() === 'completed' ) {
+			add_meta_box(
+				'fsms-already-sent-tracking-codes',
+				__( 'Already sent tracking code', 'farazsms' ),
+				[ $this, 'already_sent_tracking_codes' ],
+				'shop_order',
+				'side',
+				'default'
+			);
+		}
 	}
 
 
@@ -182,17 +188,23 @@ class Farazsms_Woocommerce {
 	 * @since 1.0.0
 	 */
 	public function tracking_code_order_postbox() {
-		add_meta_box(
-			'fsms-tracking_send_sms',
-			__( 'Send tracking code', 'farazsms' ),
-			[
-				$this,
-				'add_order_tracking_box',
-			],
-			'shop_order',
-			'side',
-			'core'
-		);
+		// Get the current order
+		$order = wc_get_order();
+
+		// Check if the order status is "completed"
+		if ( $order && $order->get_status() === 'completed' ) {
+			add_meta_box(
+				'fsms-tracking_send_sms',
+				__( 'Send tracking code', 'farazsms' ),
+				[
+					$this,
+					'add_order_tracking_box',
+				],
+				'shop_order',
+				'side',
+				'core'
+			);
+		}
 
 	}
 
@@ -474,7 +486,7 @@ class Farazsms_Woocommerce {
 							$last_order->get_formatted_billing_full_name(),
 							$last_order->get_formatted_shipping_full_name(),
 						], $retention_message );
-						Farazsms_Ippanel::send_message( [ $last_order->get_billing_phone() ], $message );
+						Farazsms_Ippanel::send_message( [ $last_order->get_billing_phone() ], $message , Farazsms_Base::$fromNum);
 						update_post_meta( $last_order->get_id(), 'sent_retention_message', '1' );
 					}
 				}
